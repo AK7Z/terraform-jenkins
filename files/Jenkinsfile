@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'https://github.com/AK7Z/ak-jpetstore.git'
+                git branch: 'main', url: 'https://github.com/AK7Z/terraform-jpetstore.git'
             }
         }
  
