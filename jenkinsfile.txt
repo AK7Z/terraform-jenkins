@@ -1,0 +1,70 @@
+pipeline {
+    agent any
+ 
+    environment {
+        RETRY_COUNT = 10 // number of curl attempts
+        RETRY_INTERVAL = 60 // wait time between curl attempts in seconds
+    }
+ 
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: 'https://github.com/AK7Z/ak-jpetstore.git'
+            }
+        }
+ 
+        stage('Provision App') {
+            steps {
+                dir('terraform') {
+                    script {
+                        sh 'terraform init'
+                        sh 'terraform apply -auto-approve || { echo "Terraform apply failed"; exit 1; }'
+                    }
+                }
+            }
+        }
+
+        stage('Check App is Running') {
+            steps {
+                dir('terraform') {
+                    script {
+                        sh '''
+                        set +e
+                        attempt=0
+                        http_code=0
+                        app_host=$(terraform output -raw private_ip)
+
+                        while [ $attempt -lt $RETRY_COUNT ] && [ $http_code -ne 200 ]; do
+                            http_code=$(curl -s -o /dev/null -I -w "%{http_code}" "$app_host:8080/jpetstore/")
+                            if [ $http_code -eq 200 ]; then
+                                echo "Application is running. HTTP status: $http_code"
+                                break
+                            else
+                                echo "Attempt $((attempt + 1)) of $RETRY_COUNT failed. HTTP status: $http_code"
+                                attempt=$((attempt + 1))
+                                sleep $RETRY_INTERVAL
+                            fi
+                        done
+
+                        set -e
+                        if [ $http_code -ne 200 ]; then
+                            echo "Application did not respond as expected after $RETRY_COUNT attempts. HTTP status: $http_code"
+                            exit 1
+                        fi
+                        '''
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            dir('terraform') {
+                script {
+                    sh 'terraform destroy -auto-approve || { echo "Terraform destroy failed"; }'
+                }
+            }
+        }
+    }
+}

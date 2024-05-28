@@ -1,0 +1,16 @@
+ws-cleanup:0.45
+timestamper:1.26
+ssh-slaves:2.948.vb_8050d697fec
+pipeline-stage-view:2.34
+pipeline-github-lib:42.v0739460cda_c4
+workflow-aggregator:596.v8c21c963d92d
+pam-auth:1.10
+matrix-auth:3.2.2
+ldap:719.vcb_d039b_77d0d
+javax-mail-api:1.6.2-9
+gradle:2.10
+github-branch-source:1785.v99802b_69816c
+email-ext:2.105
+dark-theme:439.vdef09f81f85e
+build-timeout:1.32
+ant:497.v94e7d9fffa_b_9
